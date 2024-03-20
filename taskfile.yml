@@ -76,6 +76,7 @@ tasks:
     desc: "Sync buf deps with versions listed in go.mod"
     deps:
       - check-yq
+    silent: true
     cmds:
       - |
         echo "Syncing proto/buf.yaml deps with versions listed in go.mod"
@@ -125,6 +126,7 @@ tasks:
     desc: "Sync ump.yaml dependencies with versions listed in go.mod"
     deps:
       - check-yq
+    silent: true
     cmds:
       - |
         echo "Syncing ump.yaml deps with versions listed in go.mod"
@@ -158,6 +160,5 @@ tasks:
           fi
         done
         echo "Done"
-    silent: true
 
 
