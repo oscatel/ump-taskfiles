@@ -23,6 +23,7 @@ tasks:
           part: major
 
   check-yq:
+    internal: true
     cmds:
       - command -v yq >/dev/null 2>&1 || { echo >&2 "yq is required but not installed. Aborting."; exit 1; }
     silent: true
