@@ -1,0 +1,52 @@
+# https://taskfile.dev
+
+version: '3'
+
+vars:
+  GREETING: Hello, World!
+
+tasks:
+
+  sync-deps:
+    cmds:
+      - |
+        echo "Syncing ump.yaml deps with versions listed in go.mod"
+        green_tick="\033[32m✓\033[0m"
+        orange_arrow="\033[38;5;208m↑\033[0m"
+        red_x="\033[31m✖\033[0m"
+        ump_yaml="ump.yaml"
+        go_mod="go.mod"
+
+        # Ensure yq is installed
+        if ! command -v yq &> /dev/null; then
+            echo "yq could not be found. Please install yq."
+            exit 1
+        fi
+
+        # Read dependencies from ump.yaml
+        deps=$(yq e '.dependencies | keys | .[]' $ump_yaml)
+        
+        # Iterate over each dependency to find and update versions
+        for dep in $deps; do
+          # Format the GitHub URL part to match go.mod
+          github_path="github.com/oscatel/$dep"
+        
+          version_found=$(grep "$github_path" $go_mod | awk '{print $2}' | sed 's/^v//')
+          # Read the current version from ump.yaml
+          current_version=$(yq e ".dependencies.$dep" $ump_yaml | sed 's/^v//')
+        
+          if [ ! -z "$version_found" ]; then
+            if [ "$version_found" != "$current_version" ]; then
+              yq e -i ".dependencies.$dep = \"$version_found\"" $ump_yaml
+              echo -e " $orange_arrow $dep $current_version -> $version_found"
+            else
+              echo -e " $green_tick $dep $current_version"
+            fi
+          else
+            echo -e " $red_x $dep not found in $go_mod."
+          fi
+        done
+        echo "Done"
+    silent: true
+
+
