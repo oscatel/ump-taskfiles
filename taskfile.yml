@@ -3,6 +3,12 @@ version: '3'
 
 tasks:
 
+  buf-lint:
+    desc: "Lint Protos"
+    silent: true
+    cmds:
+      - buf lint
+
   bump-patch:
     desc: "Bump the project patch version"
     cmds:
