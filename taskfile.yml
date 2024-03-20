@@ -72,6 +72,12 @@ tasks:
         echo "Bumping version to: $NEW_VERSION"
         yq e -i ".service.version = \"$NEW_VERSION\"" $FILE
 
+  sync-deps:
+    desc: "Sync dependencies with versions listed in go.mod"
+    cmds:
+      - task: sync-buf-deps
+      - task: sync-ump-deps
+
   sync-buf-deps:
     desc: "Sync buf deps with versions listed in go.mod"
     deps:
