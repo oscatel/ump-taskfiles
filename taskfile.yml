@@ -72,8 +72,59 @@ tasks:
         echo "Bumping version to: $NEW_VERSION"
         yq e -i ".service.version = \"$NEW_VERSION\"" $FILE
 
-  sync-deps:
+  sync-buf-deps:
+    desc: "Sync buf deps with versions listed in go.mod"
+    deps:
+      - check-yq
+    cmds:
+      - |
+        echo "Syncing proto/buf.yaml deps with versions listed in go.mod"
+        green_tick="\033[32m✓\033[0m"
+        orange_arrow="\033[38;5;208m↑\033[0m"
+        red_x="\033[31m✖\033[0m"
+        buf_yaml="proto/buf.yaml"
+        go_mod="go.mod"
+        
+        # Read dependencies from ump.yaml
+        deps=$(yq e '.deps | .[]' $buf_yaml)
+
+        i=-1
+        for dep in $deps; do
+          ((i++))
+          if [[ ! $dep == buf.build/oscatel/ump-* ]]; then
+            continue
+          fi;
+        
+          if [[ "$dep" == *:* ]]; then
+            package="${dep%:*}"
+            version="${dep##*:}"
+            version="${version#v}"
+          else
+            package="$dep"
+            version=""
+          fi
+        
+          gh_dep=$(echo $package | sed 's|buf.build|github.com|')        
+          go_mod_version=$(grep "$gh_dep" $go_mod | awk '{print $2}' | sed 's/^v//')
+        
+          if [ -z "$go_mod_version" ]; then
+            echo -e " $red_x $package not found in $go_mod."
+            continue
+          fi
+
+          if [ "$go_mod_version" != "$version" ]; then
+            echo -e " $orange_arrow $package $version -> $go_mod_version"
+            yq e -i ".deps[$i] = \"$package:v$go_mod_version\"" $buf_yaml
+          else 
+            echo -e " $green_tick $package $version"
+          fi
+        
+        done
+
+  sync-ump-deps:
     desc: "Sync ump.yaml dependencies with versions listed in go.mod"
+    deps:
+      - check-yq
     cmds:
       - |
         echo "Syncing ump.yaml deps with versions listed in go.mod"
@@ -82,12 +133,6 @@ tasks:
         red_x="\033[31m✖\033[0m"
         ump_yaml="ump.yaml"
         go_mod="go.mod"
-
-        # Ensure yq is installed
-        if ! command -v yq &> /dev/null; then
-            echo "yq could not be found. Please install yq."
-            exit 1
-        fi
 
         # Read dependencies from ump.yaml
         deps=$(yq e '.dependencies | keys | .[]' $ump_yaml)
