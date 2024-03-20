@@ -1,11 +1,68 @@
 # https://taskfile.dev
-
 version: '3'
 
-vars:
-  GREETING: Hello, World!
-
 tasks:
+
+  bump-patch:
+    desc: "Bump the project patch version"
+    cmds:
+      - task: bump
+        vars:
+          part: patch
+  bump-minor:
+    desc: "Bump the project minor version"
+    cmds:
+      - task: bump
+        vars:
+          part: minor
+  bump-major:
+    desc: "Bump the project major version"
+    cmds:
+      - task: bump
+        vars:
+          part: major
+
+  check-yq:
+    cmds:
+      - command -v yq >/dev/null 2>&1 || { echo >&2 "yq is required but not installed. Aborting."; exit 1; }
+    silent: true
+
+  bump:
+    desc: "Bump the project version"
+    internal: true
+    silent: true
+    deps:
+      - check-yq
+    vars:
+      part: '{{.part}}'
+    cmds:
+      - |
+        #!/bin/sh
+        set -e
+        FILE="ump.yaml"
+        CURRENT_VERSION=$(yq e '.service.version' $FILE)
+        
+        # Split the version into parts
+        IFS='.' read -r major minor patch <<< "$CURRENT_VERSION"
+        
+        case "{{.part}}" in
+          major)
+            NEW_VERSION=$((major+1)).0.0
+            ;;
+          minor)
+            NEW_VERSION=$major.$((minor+1)).0
+            ;;
+          patch)
+            NEW_VERSION=$major.$minor.$((patch+1))
+            ;;
+          *)
+            echo "Invalid version part: {{.part}}, must be one of: major, minor, patch"
+            exit 1
+            ;;
+        esac
+        
+        echo "Bumping version to: $NEW_VERSION"
+        yq e -i ".service.version = \"$NEW_VERSION\"" $FILE
 
   sync-deps:
     cmds:
