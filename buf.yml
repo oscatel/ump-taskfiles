@@ -1,0 +1,11 @@
+# https://taskfile.dev
+version: '3'
+
+tasks:
+
+  buf-lint:
+    desc: "Lint Protos"
+    silent: true
+    cmds:
+      - buf lint
+
