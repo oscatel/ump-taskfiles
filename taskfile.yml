@@ -23,6 +23,7 @@ tasks:
           part: major
 
   check-yq:
+    desc: "Check if yq is installed"
     internal: true
     cmds:
       - command -v yq >/dev/null 2>&1 || { echo >&2 "yq is required but not installed. Aborting."; exit 1; }
@@ -66,6 +67,7 @@ tasks:
         yq e -i ".service.version = \"$NEW_VERSION\"" $FILE
 
   sync-deps:
+    desc: "Sync ump.yaml dependencies with versions listed in go.mod"
     cmds:
       - |
         echo "Syncing ump.yaml deps with versions listed in go.mod"
