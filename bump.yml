@@ -41,6 +41,18 @@ tasks:
       - |
         #!/bin/sh
         set -e
+
+        # Check if current directory is a git repo and if the repo is clean
+          if ! git rev-parse --is-inside-work-tree >/dev/null 2>&1; then
+          echo "Error: Current directory is not inside a Git repository."
+          exit 1
+        fi
+  
+        if ! git diff-index --quiet HEAD --; then
+          echo "Error: Git repository is not clean. Commit or stash changes before bumping the version."
+          exit 1
+        fi        
+        
         FILE="ump.yaml"
         CURRENT_VERSION=$(yq e '.service.version' $FILE)
         
@@ -65,3 +77,13 @@ tasks:
         
         echo "Bumping version to: $NEW_VERSION"
         yq e -i ".service.version = \"$NEW_VERSION\"" $FILE
+
+        # Commit the change
+        git add $FILE
+        git commit -m "chore: bump version to $NEW_VERSION"
+  
+        # Create a tag for the new version
+        git tag -a "$NEW_VERSION" -m "Version $NEW_VERSION"
+  
+        echo "Version bumped to $NEW_VERSION, committed, and tagged."
+      
