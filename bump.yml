@@ -80,7 +80,7 @@ tasks:
 
         # Commit the change
         git add $FILE
-        git commit -m "chore: bump version to $NEW_VERSION"
+        git commit -m "chore: bump version to v$NEW_VERSION"
   
         # Create a tag for the new version
         git tag -a "v$NEW_VERSION" -m "Version v$NEW_VERSION"
